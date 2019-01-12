@@ -5,4 +5,13 @@
 
 <mapper namespace="com.pinyougou.mapper.SpecificationOptionMapper">
 
+	<!-- 往规格选项表插入数据(多条数据) 批量插入 -->
+	<insert id="save">
+		INSERT INTO `tb_specification_option`(option_name,spec_id,orders) VALUES
+		<!-- SpecificationOption so规格选项对象 -->
+		<foreach collection="specificationOptions" item="so"  separator=",">
+			(#{so.optionName},#{id}, #{so.orders})
+		</foreach>
+	</insert>
+
 </mapper>

@@ -4,13 +4,16 @@ import com.alibaba.dubbo.config.annotation.Service;
 import com.github.pagehelper.ISelect;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import com.pinyougou.common.pojo.PageResult;
 import com.pinyougou.mapper.BrandMapper;
 import com.pinyougou.pojo.Brand;
 import com.pinyougou.service.BrandService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
+import tk.mybatis.mapper.entity.Example;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -46,7 +49,24 @@ public class BrandServiceImpl implements BrandService {
 
     @Override
     public void deleteAll(Serializable[] ids) {
+        try{
+            // 批量删除品牌
+//          for (Serializable id : ids){
+//                brandMapper.deleteByPrimaryKey(id);
+//          }
+            // DELETE FROM tb_brand WHERE ( id in ( ? , ? ) )
+            // 创建Example对象，封装删除条件
+            Example example = new Example(Brand.class); // delete from tb_brand
+            // 创建条件对象
+            Example.Criteria criteria = example.createCriteria();
+            // 添加in条件
+            criteria.andIn("id", Arrays.asList(ids));
+            // 条件删除
+            brandMapper.deleteByExample(example);
 
+        }catch (Exception ex){
+            throw new RuntimeException(ex);
+        }
     }
 
     @Override
@@ -56,26 +76,23 @@ public class BrandServiceImpl implements BrandService {
 
     @Override
     public List<Brand> findAll() {
-
-//        // 开始分页
-//        PageInfo<Brand> pageInfo = PageHelper.startPage(1, 5)
-//                .doSelectPageInfo(new ISelect() {
-//            @Override
-//            public void doSelect() {
-//                // Dubbo会采用RPC远程调用服务
-//                brandMapper.selectAll();
-//            }
-//        });
-//
-//        System.out.println("总记录数：" + pageInfo.getTotal());
-//        System.out.println("总页数：" + pageInfo.getPages());
-//        System.out.println("分页的数据：" + pageInfo.getList());
-
         return brandMapper.selectAll();
     }
 
     @Override
-    public List<Brand> findByPage(Brand brand, int page, int rows) {
-        return null;
+    public PageResult findByPage(Brand brand, int page, int rows) {
+        try{
+            // 开始分页
+            PageInfo<Brand> pageInfo = PageHelper.startPage(page, rows)
+                    .doSelectPageInfo(new ISelect() {
+                @Override
+                public void doSelect() {
+                    brandMapper.findAll(brand);
+                }
+            });
+            return new PageResult(pageInfo.getTotal(), pageInfo.getList());
+        }catch (Exception ex){
+            throw new RuntimeException(ex);
+        }
     }
 }

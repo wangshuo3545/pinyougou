@@ -11,60 +11,19 @@
     <script src="/plugins/bootstrap/js/bootstrap.min.js"></script>
 
 	<script src="/plugins/angularjs/angular.min.js"></script>
-	<script type="text/javascript">
-		// 1. 定义模块
-		var app = angular.module('pinyougou', []);
+	<!-- 分页模块 -->
+	<script src="/plugins/angularjs/pagination.js"></script>
+	<link rel="stylesheet" href="/plugins/angularjs/pagination.css"/>
 
-		// 2. 模块添加控制器
-		app.controller("brandController", function($scope, $http){
+	<!-- 分页模块 -->
+	<script src="/js/base-pagination.js"></script>
+	<script src="/js/service/baseService.js"></script>
+	<script src="/js/controller/baseController.js"></script>
+	<script src="/js/controller/brandController.js"></script>
 
-            // 3. 定义查询全部品牌的方法
-			$scope.findAll = function () {
-			    // 发送异步请求
-                $http.get("/brand/findAll").then(function(response){
-                    // 获取响应数据
-					$scope.dataList = response.data;
-				});
-            };
-
-			// 定义添加或修改品牌的方法
-			$scope.saveOrUpdate = function () {
-
-			    var url = "save"; // 添加
-			    // 判断品牌的id
-				if ($scope.entity.id){ // 不是undefined
-				    url = "update"; // 修改
-				}
-				// 发送异步请求
-				$http.post("/brand/" + url, $scope.entity).then(function(response){
-				    // 获取响应数据 response.data : true|false
-					if (response.data){
-					    // 重新加载数据
-						$scope.findAll();
-					}else{
-					    alert("操作失败！")
-					}
-				});
-            };
-
-
-			// 为修改按钮绑定点击事件
-			$scope.show = function (entity) {
-			    // entity : {id : '', name : '', firstChar : ''}
-				// 把json对象转化成json字符串
-				var jsonStr = JSON.stringify(entity);
-				// 把json字符串转化成json对象(产生一个新的json对象)
-				$scope.entity = JSON.parse(jsonStr);
-            };
-
-		});
-
-	</script>
-    
 </head>
 <body ng-app="pinyougou"
 	  ng-controller="brandController"
-	  ng-init="findAll();"
 	  class="hold-transition skin-red sidebar-mini">
 	<!-- .box-body -->
 	<div class="box-header with-border">
@@ -82,7 +41,8 @@
 								data-toggle="modal" data-target="#editModal"
 								ng-click="entity={}">
 							<i class="fa fa-file-o"></i> 新建</button>
-						<button type="button" class="btn btn-default" title="删除" >
+						<button type="button" class="btn btn-default" title="删除"
+								ng-click="delete()">
 							<i class="fa fa-trash-o"></i> 删除</button>
 						<button type="button" class="btn btn-default" title="刷新"
 								onclick="window.location.reload();">
@@ -95,12 +55,14 @@
 					<!--  查询条件区-->
 					<table>
 						<tr>
-							<td><input class="form-control" placeholder="品牌名称">
+							<td><input class="form-control" ng-model="searchEntity.name" placeholder="品牌名称">
 							</td>
-							<td><input class="form-control" placeholder="首字母">
+							<td><input class="form-control" ng-model="searchEntity.firstChar" placeholder="首字母">
 							</td>
 							<td>
-								<button type="button" class="btn btn-default">
+								<button type="button"
+										ng-click="reload();"
+										class="btn btn-default">
 									<i class="fa fa-trash-o"></i> 查询
 								</button>
 							</td>
@@ -124,7 +86,9 @@
 				</thead>
 				<tbody>
 					<tr ng-repeat="entity in dataList">
-						<td><input  type="checkbox" ></td>			                              
+						<!-- $event: angularjs中的事件对象 -->
+						<td><input type="checkbox"
+								   ng-click="updateSelection($event, entity.id);"></td>
 						<td>{{entity.id}}</td>
 						<td>{{entity.name}}</td>
 						<td>{{entity.firstChar}}</td>
@@ -137,7 +101,9 @@
 
 				</tbody>
 			 </table>
-			 <!--数据列表/-->                        
+			 <!--数据列表/-->
+			 <!-- 使用分页指令，显示分页标签  tmPagination-->
+			 <tm-pagination conf="paginationConf"/>
 		</div>
 		<!-- 数据表格 /-->
 	 </div>
