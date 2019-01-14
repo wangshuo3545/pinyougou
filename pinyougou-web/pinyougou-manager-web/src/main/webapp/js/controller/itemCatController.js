@@ -4,18 +4,13 @@ app.controller('itemCatController', function($scope, $controller, baseService){
     /** 指定继承baseController */
     $controller('baseController',{$scope:$scope});
 
-    /** 查询条件对象 */
-    $scope.searchEntity = {};
-    /** 分页查询(查询条件) */
-    $scope.search = function(page, rows){
-        baseService.findByPage("/itemCat/findByPage", page,
-			rows, $scope.searchEntity)
-            .then(function(response){
-                /** 获取分页查询结果 */
-                $scope.dataList = response.data.rows;
-                /** 更新分页总记录数 */
-                $scope.paginationConf.totalItems = response.data.total;
-            });
+    // 根据父级id查询商品分类
+    $scope.findItemCatByParentId = function (parentId) {
+        baseService.sendGet("/itemCat/findItemCatByParentId?parentId="
+            + parentId).then(function (response) {
+                // 获取响应数据
+                $scope.dataList = response.data;
+        });
     };
 
     /** 添加或修改 */
@@ -57,5 +52,30 @@ app.controller('itemCatController', function($scope, $controller, baseService){
         }else{
             alert("请选择要删除的记录！");
         }
+    };
+
+    // 定义级别的变量
+    $scope.grade = 1;
+
+    // 为查询下级按钮绑定点击事件
+    $scope.selectList = function (entity, grade) {
+        // 更新级别变量
+        $scope.grade = grade;
+
+        if ($scope.grade == 1){
+            $scope.itemCat_1 = null;
+            $scope.itemCat_2 = null;
+        }
+        if ($scope.grade == 2){
+            // 把entity对象存入$scope
+            $scope.itemCat_1 = entity;  // 一级分类对象
+        }
+        if ($scope.grade == 3){
+            // 把entity对象存入$scope
+            $scope.itemCat_2 = entity;  // 二级分类对象
+        }
+
+        // 查询下级
+        $scope.findItemCatByParentId(entity.id);
     };
 });

@@ -38,8 +38,14 @@ app.controller('typeTemplateController', function($scope, $controller, baseServi
 
     /** 显示修改 */
     $scope.show = function(entity){
-       /** 把json对象转化成一个新的json对象 */
-       $scope.entity = JSON.parse(JSON.stringify(entity));
+        /** 把json对象转化成一个新的json对象 */
+        $scope.entity = JSON.parse(JSON.stringify(entity));
+        // 把品牌json数组字符串 转化成 json数组
+        $scope.entity.brandIds = JSON.parse($scope.entity.brandIds);
+        // 把规格json数组字符串 转化成 json数组
+        $scope.entity.specIds = JSON.parse($scope.entity.specIds);
+        // 把扩展属性json数组字符串 转化成 json数组
+        $scope.entity.customAttributeItems = JSON.parse($scope.entity.customAttributeItems);
     };
 
     /** 批量删除 */
@@ -48,6 +54,8 @@ app.controller('typeTemplateController', function($scope, $controller, baseServi
             baseService.deleteById("/typeTemplate/delete", $scope.ids)
                 .then(function(response){
                     if (response.data){
+                        // 清空ids数组
+                        $scope.ids = [];
                         /** 重新加载数据 */
                         $scope.reload();
                     }else{
@@ -58,4 +66,43 @@ app.controller('typeTemplateController', function($scope, $controller, baseServi
             alert("请选择要删除的记录！");
         }
     };
+
+
+    // 定义查询品牌列表的方法
+    $scope.findBrandList = function () {
+        // 发送异步请求
+        baseService.sendGet("/brand/findBrandList").then(function(response){
+            // 获取响应数据 response.data:  [{id : 1, text : '华为'},{id: 2 , text : '小米'}]
+            // 定义select2组件需要的数据
+            $scope.brandList = {data : response.data};
+        });
+    };
+
+    // 定义查询规格列表的方法
+    $scope.findSpecList = function () {
+        // 发送异步请求
+        baseService.sendGet("/specification/findSpecList").then(function(response){
+            // 获取响应数据 response.data:  [{id : 1, text : ''},{id: 2 , text : ''}]
+            // 定义select2组件需要的数据
+            $scope.specList = {data : response.data};
+        });
+    };
+
+    // 新增一行
+    $scope.addTableRow = function () {
+        $scope.entity.customAttributeItems.push({});
+    };
+    // 删除一行
+    $scope.deleteTableRow = function (idx) {
+        $scope.entity.customAttributeItems.splice(idx,1);
+    };
+
+
+
+    var json = {"id":24,"text":"欧米媞"};
+    var key = "text";
+    //alert(json[key]);
+
+
+
 });

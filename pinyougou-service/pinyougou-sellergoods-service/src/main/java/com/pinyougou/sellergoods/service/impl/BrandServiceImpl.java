@@ -13,8 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import tk.mybatis.mapper.entity.Example;
 
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 /**
  * 品牌服务接口实现类
@@ -91,6 +90,16 @@ public class BrandServiceImpl implements BrandService {
                 }
             });
             return new PageResult(pageInfo.getTotal(), pageInfo.getList());
+        }catch (Exception ex){
+            throw new RuntimeException(ex);
+        }
+    }
+
+    /** 查询品牌列表(id与name) */
+    public List<Map<String,Object>> findAllByIdAndName(){
+        try{
+           // [{id : 1, text : '华为'},{id: 2 , text : '小米'}]
+           return brandMapper.findAllByIdAndName();
         }catch (Exception ex){
             throw new RuntimeException(ex);
         }

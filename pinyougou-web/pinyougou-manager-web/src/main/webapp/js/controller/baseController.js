@@ -44,4 +44,20 @@ app.controller('baseController', function ($scope) {
         }
     };
 
+    /** 提取数组中json某个属性，返回拼接的字符串(逗号分隔) */
+    $scope.jsonArr2Str = function (jsonArrStr, key) {
+        // [{"id":24,"text":"欧米媞"}]
+        // 把json数组字符串转化成 json对象数组
+        var jsonArr = JSON.parse(jsonArrStr);
+        // 定义数组
+        var res = [];
+        for (var i = 0; i < jsonArr.length; i++){
+            // 取一个数组元素 {"id":24,"text":"欧米媞"}
+            var json = jsonArr[i];
+            res.push(json[key]);
+        }
+        // join : 把数组中的元素用 逗号 分隔 返回一个字符串
+        return res.join(",");
+    };
+
 });
