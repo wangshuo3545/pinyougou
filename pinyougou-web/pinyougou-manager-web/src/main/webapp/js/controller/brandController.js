@@ -73,5 +73,4 @@ app.controller("brandController", function($scope, $controller, baseService){
             alert("请选择要删除的品牌！");
         }
     };
-
 });

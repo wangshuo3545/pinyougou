@@ -5,7 +5,7 @@
 
 <mapper namespace="com.pinyougou.mapper.TypeTemplateMapper">
 	<!--  多条件查询类型模板 -->
-	<select id="findAll" parameterType="int" resultType="TypeTemplate">
+	<select id="findAll" resultType="TypeTemplate">
 		  select * from tb_type_template
 		  <where>
 			  <!-- 类型模板名称 -->
