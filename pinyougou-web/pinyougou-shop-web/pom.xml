@@ -24,6 +24,16 @@
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-config</artifactId>
         </dependency>
+        <!-- 配置文件上传依赖jar -->
+        <dependency>
+            <groupId>commons-fileupload</groupId>
+            <artifactId>commons-fileupload</artifactId>
+        </dependency>
+        <!-- 配置FastDFS客户端jar -->
+        <dependency>
+            <groupId>org.csource</groupId>
+            <artifactId>fastdfs-client</artifactId>
+        </dependency>
     </dependencies>
 
 </project>

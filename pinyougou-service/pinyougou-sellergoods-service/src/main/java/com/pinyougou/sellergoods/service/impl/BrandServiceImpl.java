@@ -89,6 +89,7 @@ public class BrandServiceImpl implements BrandService {
                     brandMapper.findAll(brand);
                 }
             });
+            // pageInfo.getList() --> Page接口代理对象
             return new PageResult(pageInfo.getTotal(), pageInfo.getList());
         }catch (Exception ex){
             throw new RuntimeException(ex);
