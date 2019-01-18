@@ -37,9 +37,9 @@ app.controller('goodsController', function($scope, $controller, baseService){
         });
     };
 
-    // 定义数据存储结构
+    // 定义商品数据存储结构 json对象
     // $scope.goods.goodsDesc.itemImages;
-    $scope.goods = {goodsDesc : {itemImages : []}};
+    $scope.goods = {goodsDesc : {itemImages : [], specificationItems : []}};
 
     // 添加上传的图片
     $scope.addPic = function () {
@@ -101,6 +101,8 @@ app.controller('goodsController', function($scope, $controller, baseService){
     // $scope.$watch() 监控goods.typeTemplateId变量发生改变，查询类型模板对象
     $scope.$watch("goods.typeTemplateId", function (newVal, oldVal) {
         if (newVal){ // 不是undefined
+
+            //1. 查询类型模板对象
             baseService.sendGet("/typeTemplate/findOne?id="
                         + newVal).then(function(response){
                 // 获取品牌的数据 {id : '', brand_ids : "", ...}
@@ -110,21 +112,117 @@ app.controller('goodsController', function($scope, $controller, baseService){
                 $scope.goods.goodsDesc.customAttributeItems =
                     JSON.parse(response.data.customAttributeItems);
             });
+
+            // 2. 查询规格选项数据
+            baseService.sendGet("/typeTemplate/findSpecByTypeTemplateId?id="
+                + newVal).then(function(response){
+                // 获取响应数据
+                /**
+                 * [{"id":27,"text":"网络", "options" : [{id : '',optionName:'',..},{}]},
+                    {"id":32,"text":"机身内存", "options" : [{},{}]}]
+                 */
+                $scope.specList = response.data;
+            });
+
+
         }else { // 是undefined
             $scope.brandList = [];
         }
     });
 
+    // 记录用户选中的规格选项
+    $scope.updateSpecAttr = function ($event, specName, optionName) {
+        /**
+         * $scope.goods.goodsDesc.specificationItems = [];
+          [{"attributeValue":["联通4G","移动4G","电信4G"],"attributeName":"网络"},
+           {"attributeValue":["64G","128G"],"attributeName":"机身内存"}]
+         */
+        // obj : {"attributeValue":["联通4G","移动4G","电信4G"],"attributeName":"网络"}
+        var obj = searchJsonByKey($scope.goods.goodsDesc.specificationItems, "attributeName", specName);
+        if (obj){ // 不是null
+            // 判断checkbox是否选中
+            if ($event.target.checked) {
+                obj.attributeValue.push(optionName);
+            }else{
+                // 得到optionName在obj.attributeValue中的索引号
+                var idx = obj.attributeValue.indexOf(optionName);
+                obj.attributeValue.splice(idx, 1);
+                // 判断obj.attributeValue数组长度是否等于0
+                if (obj.attributeValue.length == 0){
+                    // {"attributeValue":[],"attributeName":"机身内存"} 在 specificationItems中的索引号
+                    idx = $scope.goods.goodsDesc.specificationItems.indexOf(obj);
+                    // 从规格数组中删除 一个规格选项对象
+                    $scope.goods.goodsDesc.specificationItems.splice(idx,1);
+                }
+            }
+        }else{
+            $scope.goods.goodsDesc.specificationItems
+                .push({attributeValue:[optionName],attributeName:specName});
+        }
+    };
 
+    // 根据指定的key从json数组中查询一个json对象
+    var searchJsonByKey = function (jsonArr, key, value) {
+        /**
+         * jsonArr:
+         * [{"attributeValue":["联通4G","移动4G","电信4G"],"attributeName":"网络"},
+         {"attributeValue":["64G","128G"],"attributeName":"机身内存"}]
+         */
+        for (var i = 0; i < jsonArr.length; i++){
+            // 取一个数组元素
+            // {"attributeValue":["联通4G","移动4G","电信4G"],"attributeName":"网络"}
+            var obj = jsonArr[i];
+            if (obj[key] == value){
+                return obj;
+            }
+        }
+        return null;
+    };
 
+    // 创建SKU商品数组
+    $scope.createItems = function () {
+        // 定义SKU商品数组，并且初始化 spec: {"网络":"联通4G"}
+        $scope.goods.items = [{spec : {}, price : 0, num : 9999, status : '0', isDefault : '0' }];
 
+        // 获取用户选中的规格选项
+        // [{"attributeValue":["联通4G","电信3G"],"attributeName":"网络"}]
+        /**
+         *  [{"attributeValue":["联通4G","移动4G","电信4G"],"attributeName":"网络"}]
+         */
+        var specItems = $scope.goods.goodsDesc.specificationItems;
+        // 迭代规格选项数组
+        for (var i = 0; i < specItems.length; i++){
+            // 取一个数组元素
+            // {"attributeValue":["联通4G","移动4G","电信4G"],"attributeName":"网络"}
+            var obj = specItems[i];
+            // 把用户选中的规格选项转化成SKU商品
+            $scope.goods.items  = swapItems( $scope.goods.items, obj.attributeValue, obj.attributeName);
+        }
+    };
 
+    // 把用户选中的规格选项转化成SKU商品，返回一个新的SKU商品数组
+    var swapItems = function (items, attributeValue, attributeName) {
 
+        // 定义一个新的SKU商品数组
+        var newItems = [];
+        // items: [{spec : {}, price : 0, num : 9999, status : '0', isDefault : '0' }]
+        // 迭代原来的SKU商品数组
+        for (var i = 0; i < items.length; i++){
+            // {spec : {}, price : 0, num : 9999, status : '0', isDefault : '0' }
+            var item = items[i];
 
-
-
-
-
+            // "attributeValue":["联通4G","移动4G","电信4G"]
+            for (var j = 0; j < attributeValue.length; j++){
+                // 克隆item，产生新的
+                var newItem = JSON.parse(JSON.stringify(item));
+                // 设置规格 spec: {"网络":"联通4G"}
+                newItem.spec[attributeName] = attributeValue[j];
+                // 添加新的SKU商品
+                newItems.push(newItem);
+            }
+        }
+        return newItems;
+    };
 
     /** 查询条件对象 */
     $scope.searchEntity = {};
@@ -139,6 +237,19 @@ app.controller('goodsController', function($scope, $controller, baseService){
                 $scope.paginationConf.totalItems = response.data.total;
             });
     };
+
+    // 定义状态码提示文本数组
+    $scope.status = ['未审核','已审核','审核不通过','已关闭'];
+
+
+
+
+
+
+
+
+
+
 
     /** 显示修改 */
     $scope.show = function(entity){

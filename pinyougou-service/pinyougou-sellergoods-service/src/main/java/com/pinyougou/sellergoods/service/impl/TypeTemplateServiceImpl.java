@@ -1,11 +1,14 @@
 package com.pinyougou.sellergoods.service.impl;
 
 import com.alibaba.dubbo.config.annotation.Service;
+import com.alibaba.fastjson.JSON;
 import com.github.pagehelper.ISelect;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.pinyougou.common.pojo.PageResult;
+import com.pinyougou.mapper.SpecificationOptionMapper;
 import com.pinyougou.mapper.TypeTemplateMapper;
+import com.pinyougou.pojo.SpecificationOption;
 import com.pinyougou.pojo.TypeTemplate;
 import com.pinyougou.service.TypeTemplateService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +18,7 @@ import tk.mybatis.mapper.entity.Example;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 类型模板服务接口实现类
@@ -29,6 +33,8 @@ public class TypeTemplateServiceImpl implements TypeTemplateService {
 
     @Autowired
     private TypeTemplateMapper typeTemplateMapper;
+    @Autowired
+    private SpecificationOptionMapper specificationOptionMapper;
 
     @Override
     public void save(TypeTemplate typeTemplate) {
@@ -91,6 +97,45 @@ public class TypeTemplateServiceImpl implements TypeTemplateService {
                 }
             });
             return new PageResult(pageInfo.getTotal(), pageInfo.getList());
+        }catch (Exception ex){
+            throw new RuntimeException(ex);
+        }
+    }
+
+
+    /** 根据类型模板id查询规格选项数据 */
+    public List<Map> findSpecByTypeTemplateId(Long id){
+        try{
+            // 1. 根据模板id查询模板对象
+            TypeTemplate typeTemplate = findOne(id);
+
+            // 2. 获取关联的规格数据
+            // [{"id":27,"text":"网络"},{"id":32,"text":"机身内存"}]
+            String specIds = typeTemplate.getSpecIds();
+
+            // 3. 把json字符串转化成List<Map> (FastJson框架)
+            List<Map> specList = JSON.parseArray(specIds, Map.class);
+
+
+            // 4. 迭代规格List集合
+            for (Map map : specList){
+                // map: {"id":27,"text":"网络"}
+                // 获取规格id
+                Object specId = map.get("id");
+                // SELECT * FROM `tb_specification_option` WHERE spec_id=27
+                // 创建规格选项对象，封装查询条件(等于号查询条件)
+                SpecificationOption so = new SpecificationOption();
+                // spec_id=27
+                so.setSpecId(Long.valueOf(specId.toString()));
+                // 条件查询
+                List<SpecificationOption> options = specificationOptionMapper.select(so);
+
+                map.put("options", options);
+            }
+
+            // [{"id":27,"text":"网络", "options" : [{},{}]},{"id":32,"text":"机身内存","options" : [{},{}]}]
+            return specList;
+
         }catch (Exception ex){
             throw new RuntimeException(ex);
         }
