@@ -196,7 +196,7 @@ app.controller('goodsController', function($scope, $controller, baseService){
             // {"attributeValue":["联通4G","移动4G","电信4G"],"attributeName":"网络"}
             var obj = specItems[i];
             // 把用户选中的规格选项转化成SKU商品
-            $scope.goods.items  = swapItems( $scope.goods.items, obj.attributeValue, obj.attributeName);
+            $scope.goods.items  = swapItems($scope.goods.items, obj.attributeValue, obj.attributeName);
         }
     };
 
@@ -211,9 +211,9 @@ app.controller('goodsController', function($scope, $controller, baseService){
             // {spec : {}, price : 0, num : 9999, status : '0', isDefault : '0' }
             var item = items[i];
 
-            // "attributeValue":["联通4G","移动4G","电信4G"]
+            // "attributeValue":["联通4G","移动4G"]
             for (var j = 0; j < attributeValue.length; j++){
-                // 克隆item，产生新的
+                // 克隆item，产生新的item
                 var newItem = JSON.parse(JSON.stringify(item));
                 // 设置规格 spec: {"网络":"联通4G"}
                 newItem.spec[attributeName] = attributeValue[j];
@@ -242,35 +242,43 @@ app.controller('goodsController', function($scope, $controller, baseService){
     $scope.status = ['未审核','已审核','审核不通过','已关闭'];
 
 
-
-
-
-
-
-
-
-
-
-    /** 显示修改 */
-    $scope.show = function(entity){
-       /** 把json对象转化成一个新的json对象 */
-       $scope.entity = JSON.parse(JSON.stringify(entity));
-    };
-
-    /** 批量删除 */
-    $scope.delete = function(){
+    // 商品上下架
+    $scope.updateMarketable = function (status) {
         if ($scope.ids.length > 0){
-            baseService.deleteById("/goods/delete", $scope.ids)
-                .then(function(response){
-                    if (response.data){
-                        /** 重新加载数据 */
-                        $scope.reload();
-                    }else{
-                        alert("删除失败！");
+            // 判断用户选择的商品是否全部审核通过
+            // 1. 获取分页数据(数组) $scope.dataList : [{},{}]
+            for (var i = 0; i < $scope.dataList.length; i++){
+                // 取数组中的元素
+                var json = $scope.dataList[i];
+                // 判断json的id的值是否在数组中 idx -1代表数组中没有这个元素
+                var idx = $scope.ids.indexOf(json.id);
+                if (idx >= 0){
+                    // 判断该json对象的审核状态
+                    if (json.auditStatus != 1){
+                        alert("请选择审核通过的商品！");
+                        return;
                     }
-                });
+                }
+            }
+            // 发送异步请求
+            baseService.sendGet("/goods/updateMarketable?ids="
+                + $scope.ids + "&status=" + status).then(function (response) {
+                // 获取响应数据
+                if (response.data){
+                    // 重新加载数据
+                    $scope.reload();
+                    // 清空ids数组
+                    $scope.ids = [];
+                }else {
+                    alert("操作失败！");
+                }
+            });
+
         }else{
-            alert("请选择要删除的记录！");
+            alert("请选择要上下架的商品！");
         }
     };
+
+
+
 });

@@ -206,4 +206,13 @@ public class GoodsServiceImpl implements GoodsService {
             throw new RuntimeException(ex);
         }
     }
+
+    /** 修改商品审核状态 */
+    public void updateStatus(String columnName, Long[] ids, String status){
+        try{
+            goodsMapper.updateStatus(columnName, ids, status);
+        }catch (Exception ex){
+            throw new RuntimeException(ex);
+        }
+    }
 }

@@ -13,6 +13,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>pinyougou-sellergoods-service</module>
+        <module>pinyougou-content-service</module>
     </modules>
 
     <properties>

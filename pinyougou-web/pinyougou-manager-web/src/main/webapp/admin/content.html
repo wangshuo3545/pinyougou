@@ -11,9 +11,22 @@
 		<script src="/plugins/jQuery/jquery-2.2.3.min.js"></script>
 	    <script src="/plugins/bootstrap/js/bootstrap.min.js"></script>
 
+		<script src="/plugins/angularjs/angular.min.js"></script>
+		<!-- 分页模块 -->
+		<script src="/plugins/angularjs/pagination.js"></script>
+		<link rel="stylesheet" href="/plugins/angularjs/pagination.css"/>
+		<!-- 分页模块 -->
+		<script src="/js/base-pagination.js"></script>
+		<script src="/js/service/baseService.js"></script>
+		<script src="/js/controller/baseController.js"></script>
+		<script src="/js/controller/contentController.js"></script>
+
 	</head>
 
-	<body class="hold-transition skin-red sidebar-mini">
+	<body ng-app="pinyougou"
+		  ng-controller="contentController"
+		  ng-init="findContentCategory();"
+		  class="hold-transition skin-red sidebar-mini">
 		<!-- .box-body -->
 		<div class="box-header with-border">
 			<h3 class="box-title">广告管理</h3>
@@ -32,7 +45,9 @@
 								data-toggle="modal" data-target="#editModal">
 								<i class="fa fa-file-o"></i> 新建
 							</button>
-							<button type="button" class="btn btn-default"
+							<button type="button"
+									ng-click="delete();"
+									class="btn btn-default"
 									title="删除">
 								<i class="fa fa-trash-o"></i> 删除
 							</button>
@@ -65,24 +80,27 @@
 						</tr>
 					</thead>
 					<tbody>
-						<tr>
+						<tr ng-repeat="entity in dataList">
 							<td><input type="checkbox"
-									   ></td>
+									   ng-click="updateSelection($event,entity.id)"></td>
 							<td>{{entity.id}}</td>
 							<td>{{entity.categoryId}}</td>
 							<td>{{entity.title}}</td>
 							<td>{{entity.url}}</td>
 							<td><img src="{{entity.pic}}" width="100px" height="50px"></td>
 							<td>{{entity.sortOrder}}</td>
-							<td>{{status[entity.status]}}</td>
+							<td>{{entity.status ? '有效' : '无效'}}</td>
 							<td class="text-center">
-								<button type="button" class="btn bg-olive btn-xs"
+								<button type="button"
+										ng-click="show(entity)"
+										class="btn bg-olive btn-xs"
 										data-toggle="modal" data-target="#editModal">修改</button>
 							</td>
 						</tr>
 					</tbody>
 				</table>
 				<!--数据列表/-->
+				<tm-pagination conf="paginationConf"/>
 				
 			</div>
 			<!-- 数据表格 /-->
@@ -105,7 +123,9 @@
 							<tr>
 								<td>广告分类</td>
 								<td>
-									<select class="form-control">
+									<select ng-model="entity.categoryId"
+											ng-options="c.id as c.name for c in contentCategoryList"
+											class="form-control">
 										<option value="">==请选择广告分类==</option>
 									</select>
 								</td>
@@ -132,8 +152,10 @@
 									<table>
 										<tr>
 											<td><input type="file" id="file" />
-												<button class="btn btn-primary" type="button">上传</button></td>
-											<td><img src="" width="200px"
+												<button class="btn btn-primary"
+														ng-click="upload();"
+														type="button">上传</button></td>
+											<td><img src="{{entity.pic}}" width="200px"
 												height="100px"></td>
 										</tr>
 									</table>
@@ -141,14 +163,20 @@
 							</tr>
 							<tr>
 								<td>是否有效</td>
-								<td><input type="checkbox" class="icheckbox_square-blue"
+								<td><input type="checkbox"
+										   ng-true-value="1"
+										   ng-false-value="0"
+										   ng-checked="entity.status == 1"
+										   class="icheckbox_square-blue"
 										   ng-model="entity.status"/>
 								</td>
 							</tr>
 						</table>
 					</div>
 					<div class="modal-footer">
-						<button class="btn btn-success" data-dismiss="modal"
+						<button class="btn btn-success"
+								ng-click="saveOrUpdate()"
+								data-dismiss="modal"
 								aria-hidden="true">保存</button>
 						<button class="btn btn-default" data-dismiss="modal"
 								aria-hidden="true">关闭</button>

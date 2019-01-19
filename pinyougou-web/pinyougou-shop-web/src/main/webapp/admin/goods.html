@@ -44,11 +44,13 @@
 							<button type="button" class="btn btn-default" title="删除">
 								<i class="fa fa-trash-o"></i> 删除
 							</button>
-							<button type="button" class="btn btn-default" title="上架">
+							<button type="button" class="btn btn-default"
+									ng-click="updateMarketable('1')"
+									title="上架">
 								<i class="fa fa-check"></i> 上架
 							</button>
 							<button type="button" class="btn btn-default" title="下架"
-								onclick='confirm("你确认要下架吗？")'>
+									ng-click="updateMarketable('0')">
 								<i class="fa fa-ban"></i> 下架
 							</button>
 							<button type="button" class="btn btn-default" title="刷新"
@@ -85,12 +87,14 @@
 							<th class="sorting">二级分类</th>
 							<th class="sorting">三级分类</th>
 							<th class="sorting">状态</th>
+							<th class="sorting">上下架</th>
 							<th class="text-center">操作</th>
 						</tr>
 					</thead>
 					<tbody>
 						<tr ng-repeat="entity in dataList">
-							<td><input type="checkbox"></td>
+							<td><input type="checkbox"
+									   ng-click="updateSelection($event,entity.id);"></td>
 							<td>{{entity.id}}</td>
 							<td>{{entity.goodsName}}</td>
 							<td>{{entity.price}}</td>
@@ -98,6 +102,7 @@
 							<td>{{entity.category2Name}}</td>
 							<td>{{entity.category3Name}}</td>
 							<td>{{status[entity.auditStatus]}}</td>
+							<td>{{entity.isMarketable == 1 ? '上架' : '下架'}}</td>
 							<td class="text-center">
 								<button type="button" class="btn bg-olive btn-xs">修改</button>
 							</td>

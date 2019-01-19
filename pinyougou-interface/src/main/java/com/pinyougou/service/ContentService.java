@@ -1,8 +1,10 @@
 package com.pinyougou.service;
 
+import com.pinyougou.common.pojo.PageResult;
 import com.pinyougou.pojo.Content;
-import java.util.List;
+
 import java.io.Serializable;
+import java.util.List;
 /**
  * ContentService 服务接口
  * @date 2019-01-11 09:57:49
@@ -29,6 +31,6 @@ public interface ContentService {
 	List<Content> findAll();
 
 	/** 多条件分页查询 */
-	List<Content> findByPage(Content content, int page, int rows);
+	PageResult findByPage(Content content, int page, int rows);
 
 }
