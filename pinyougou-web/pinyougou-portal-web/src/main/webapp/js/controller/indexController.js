@@ -11,4 +11,10 @@ app.controller("indexController", function($scope, baseService){
         });
     };
 
+    // 跳转到搜索系统
+    $scope.search = function () {
+        var keywords = $scope.keywords ? $scope.keywords : "";
+        location.href = "http://search.pinyougou.com?keywords=" + keywords;
+    };
+
 });
