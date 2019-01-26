@@ -11,9 +11,11 @@ import com.pinyougou.pojo.*;
 import com.pinyougou.service.GoodsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
+import tk.mybatis.mapper.entity.Example;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -211,6 +213,58 @@ public class GoodsServiceImpl implements GoodsService {
     public void updateStatus(String columnName, Long[] ids, String status){
         try{
             goodsMapper.updateStatus(columnName, ids, status);
+        }catch (Exception ex){
+            throw new RuntimeException(ex);
+        }
+    }
+
+    /** 根据SPU商品的id 查询商品数据 */
+    public Map<String,Object> getGoods(Long goodsId){
+        try{
+            Map<String,Object> dataModel = new HashMap<>();
+
+            // 1. 查询tb_goods
+            Goods goods = goodsMapper.selectByPrimaryKey(goodsId);
+
+            // 2. 查询tb_goods_desc
+            GoodsDesc goodsDesc = goodsDescMapper.selectByPrimaryKey(goodsId);
+
+            // 3. 查询一级分类名称、二级分类名称、三级分类名称
+            if (goods.getCategory3Id() != null && goods.getCategory3Id() > 0){
+                // 查询一级分类名称
+                String itemCat1 = itemCatMapper.selectByPrimaryKey(goods.getCategory1Id()).getName();
+                dataModel.put("itemCat1", itemCat1);
+
+                // 查询二级分类名称
+                String itemCat2 = itemCatMapper.selectByPrimaryKey(goods.getCategory2Id()).getName();
+                dataModel.put("itemCat2", itemCat2);
+
+                // 查询三级分类名称
+                String itemCat3 = itemCatMapper.selectByPrimaryKey(goods.getCategory3Id()).getName();
+                dataModel.put("itemCat3", itemCat3);
+
+            }
+
+            // 3. 查询tb_item
+            // SELECT * FROM `tb_item` WHERE goods_id = 149187842867973 ORDER BY is_default DESC
+            Example example = new Example(Item.class);
+            // 创建条件对象
+            Example.Criteria criteria = example.createCriteria();
+            // goods_id = 149187842867973
+            criteria.andEqualTo("goodsId", goodsId);
+            // ORDER BY is_default DESC(把默认的SKU排在前面)
+            example.orderBy("isDefault").desc();
+            // 条件查询
+            List<Item> itemList = itemMapper.selectByExample(example);
+
+
+            dataModel.put("goods", goods);
+            dataModel.put("goodsDesc", goodsDesc);
+
+            // 为了在页面上操作方便，我们把itemList转化成json数组字符串返回，这样在js中比较好操作
+            dataModel.put("itemList", JSON.toJSONString(itemList));
+
+            return dataModel;
         }catch (Exception ex){
             throw new RuntimeException(ex);
         }
