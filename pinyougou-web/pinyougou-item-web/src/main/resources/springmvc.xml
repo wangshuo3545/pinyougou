@@ -47,5 +47,5 @@
         interface: 服务名称
     -->
     <!-- 配置包扫描方式引用的服务 -->
-    <dubbo:annotation package="com.pinyougou.item.controller"/>
+    <dubbo:annotation package="com.pinyougou.item"/>
 </beans>

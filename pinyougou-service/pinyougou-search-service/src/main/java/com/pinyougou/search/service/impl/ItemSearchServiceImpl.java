@@ -4,6 +4,7 @@ import com.alibaba.dubbo.config.annotation.Service;
 import com.pinyougou.service.ItemSearchService;
 import com.pinyougou.solr.SolrItem;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.solr.core.SolrTemplate;
@@ -28,6 +29,53 @@ public class ItemSearchServiceImpl implements ItemSearchService{
 
     @Autowired
     private SolrTemplate solrTemplate;
+
+
+    /**
+     * 添加或修改索引
+     * @param solrItems
+     */
+    public void saveOrUpdate(List<SolrItem> solrItems){
+        try{
+            // 添加或修改Solr服务器中的索引库
+            UpdateResponse updateResponse = solrTemplate.saveBeans(solrItems);
+            // 判断响应状态
+            if (updateResponse.getStatus() == 0){
+                solrTemplate.commit();
+            }else{
+                solrTemplate.rollback();
+            }
+        }catch (Exception ex){
+            throw new RuntimeException(ex);
+        }
+    }
+
+    /**
+     * 删除索引
+     * @param goodsIds
+     */
+    public void delete(Long[] goodsIds){
+        try{
+            // 创建查询对象
+            Query query = new SimpleQuery();
+            // 创建条件对象
+            Criteria criteria = new Criteria("goodsId").in(goodsIds);
+            // 添加条件对象
+            query.addCriteria(criteria);
+
+            // 删除Solr服务器中的索引数据 (goodsId)
+            UpdateResponse updateResponse = solrTemplate.delete(query);
+            // 判断响应状态
+            if (updateResponse.getStatus() == 0){
+                solrTemplate.commit();
+            }else{
+                solrTemplate.rollback();
+            }
+        }catch (Exception ex){
+            throw new RuntimeException(ex);
+        }
+    }
+
     /**
      * 商品搜索方法
      * @param params 搜索条件

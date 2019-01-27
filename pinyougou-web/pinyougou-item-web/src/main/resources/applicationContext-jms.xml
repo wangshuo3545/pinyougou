@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:jms="http://www.springframework.org/schema/jms"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/jms
+       http://www.springframework.org/schema/jms/spring-jms.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd">
+
+
+    <!-- 配置加载属性文件 -->
+    <context:property-placeholder location="classpath:application.properties"/>
+
+    <!-- ####### 通用的配置 ######### -->
+    <!-- 配置ActiveMQ连接工厂 -->
+    <bean id="activeMQConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+        <!-- 设置消息中间件的连接地址 -->
+        <property name="brokerURL" value="${brokerURL}"/>
+    </bean>
+    <!-- 配置SpringJMS管理ActiveMQ的连接工厂 -->
+    <bean id="singleConnectionFactory" class="org.springframework.jms.connection.SingleConnectionFactory">
+        <!-- 设置目标连接工厂 -->
+        <property name="targetConnectionFactory" ref="activeMQConnectionFactory"/>
+    </bean>
+
+
+    <!-- ####### 配置消息消费者 ######### -->
+    <!-- 配置消息监听器容器
+         connection-factory: 连接工厂
+         destination-type: 目的地的类型 queue|topic
+         acknowledge="transacted" : 开启事务
+         concurrency: 并发数(多线程) min-max | max
+         进程中创建线程数量是有限制 (windows)2048 (linux)1024
+     -->
+    <jms:listener-container connection-factory="singleConnectionFactory"
+                            concurrency="1"
+                            receive-timeout="10000"
+                            destination-type="topic">
+        <!-- 配置消息监听器
+            destination: 主题的名称
+         -->
+        <jms:listener destination="page.topic" ref="itemMessageListener"/>
+        <jms:listener destination="page.delete.topic" ref="deleteMessageListener"/>
+    </jms:listener-container>
+    <!-- 配置自定义的消息监听器类 -->
+    <bean id="itemMessageListener" class="com.pinyougou.item.listener.ItemMessageListener"/>
+    <bean id="deleteMessageListener" class="com.pinyougou.item.listener.DeleteMessageListener"/>
+</beans>
