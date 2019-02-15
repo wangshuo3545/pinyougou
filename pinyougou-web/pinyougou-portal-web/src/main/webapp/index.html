@@ -13,12 +13,13 @@
 	<script src="/plugins/angularjs/angular.min.js"></script>
 	<script src="/js/base.js"></script>
 	<script src="/js/service/baseService.js"></script>
+	<script src="/js/controller/baseController.js"></script>
 	<script src="/js/controller/indexController.js"></script>
 </head>
 
 <body ng-app="pinyougou"
 	  ng-controller="indexController"
-	  ng-init="findContentByCategoryId(1)">
+	  ng-init="findContentByCategoryId(1);loadUsername();">
 	<!-- 头部栏位 -->
 	<!--页面顶部-->
 <div id="nav-bottom">
@@ -28,9 +29,15 @@
 			<div class="py-container">
 				<div class="shortcut">
 					<ul class="fl">
-						<li class="f-item">品优购欢迎您！</li>
-						<li class="f-item">请<a href="login.html" target="_blank">登录</a>　<span>
-						<a href="http://user.pinyougou.com/register.html" target="_blank">免费注册</a></span></li>
+						<li class="f-item" ng-if="loginName">{{loginName}}，品优购欢迎您！&nbsp;
+							<a href="http://sso.pinyougou.com/logout?service={{redirectUrl}}">退出</a>
+						</li>
+						<li class="f-item" ng-if="!loginName">
+							请 <a href="http://sso.pinyougou.com/login?service={{redirectUrl}}">登录</a>　
+							<span>
+							<a href="http://user.pinyougou.com/register.html">免费注册</a>
+						</span>
+						</li>
 					</ul>
 					<ul class="fr">
 						<li class="f-item">我的订单</li>

@@ -1,5 +1,7 @@
 /** 定义首页控制器层 */
-app.controller("indexController", function($scope, baseService){
+app.controller("indexController", function($scope,$controller, baseService){
+
+    $controller('baseController', {$scope:$scope});
 
     // 根据分类id查询广告数据
     $scope.findContentByCategoryId = function (categoryId) {
