@@ -31,4 +31,12 @@ public interface SeckillOrderService {
 	/** 多条件分页查询 */
 	List<SeckillOrder> findByPage(SeckillOrder seckillOrder, int page, int rows);
 
+	/** 提交订单到Redis数据库 */
+    boolean submitOrderRedis(String userId, Long id);
+
+    /** 查询秒杀查询预订单 */
+	SeckillOrder findSeckillOrderFromRedis(String userId);
+
+	/** 支付成功,订单存储到mysql数据库 */
+	void saveOrder(String userId, String transactionId);
 }

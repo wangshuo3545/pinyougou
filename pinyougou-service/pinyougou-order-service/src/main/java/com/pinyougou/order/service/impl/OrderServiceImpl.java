@@ -5,8 +5,10 @@ import com.pinyougou.cart.Cart;
 import com.pinyougou.common.util.IdWorker;
 import com.pinyougou.mapper.OrderItemMapper;
 import com.pinyougou.mapper.OrderMapper;
+import com.pinyougou.mapper.PayLogMapper;
 import com.pinyougou.pojo.Order;
 import com.pinyougou.pojo.OrderItem;
+import com.pinyougou.pojo.PayLog;
 import com.pinyougou.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -36,6 +38,8 @@ public class OrderServiceImpl implements OrderService {
     private IdWorker idWorker;
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
+    @Autowired
+    private PayLogMapper payLogMapper;
 
     @Override
     public void save(Order order) {
@@ -43,6 +47,11 @@ public class OrderServiceImpl implements OrderService {
             // 1. 获取用户的购物车数据
             List<Cart> carts = (List<Cart>)redisTemplate
                     .boundValueOps("cart_" + order.getUserId()).get();
+
+            // 定义本次支付的总金额
+            double totalMoney = 0;
+            // 定义关联的订单号
+            String orderIds = "";
 
             // 2. 往订单表插入数据
             // 一个商家生成一个订单 (cart)
@@ -92,11 +101,77 @@ public class OrderServiceImpl implements OrderService {
                 order1.setPayment(new BigDecimal(money));
                 // 往tb_order表插入数据
                 orderMapper.insertSelective(order1);
+
+                // 累计支付金额
+                totalMoney += money;
+                // 关联的订单
+                orderIds += orderId + ",";
             }
 
+
+            // 往支付日志表中插入数据
+            if ("1".equals(order.getPaymentType())){ // 在线支付
+                PayLog payLog = new PayLog();
+                // 交易订单号
+                payLog.setOutTradeNo(String.valueOf(idWorker.nextId()));
+                // 创建时间
+                payLog.setCreateTime(new Date());
+                // 支付金额(分)
+                payLog.setTotalFee((long)(totalMoney * 100));
+                // 用户id
+                payLog.setUserId(order.getUserId());
+                // 交易状态 0:未支付 2:已支付
+                payLog.setTradeState("0");
+                // 订单列表
+                payLog.setOrderList(orderIds.substring(0, orderIds.length() -1));
+                // 支付类型
+                payLog.setPayType(order.getPaymentType());
+                // 往支付日志表中插入数据
+                payLogMapper.insertSelective(payLog);
+
+                // 把用户最新需要支付的存储到Redis数据库
+                redisTemplate.boundValueOps("payLog_" + order.getUserId()).set(payLog);
+            }
             // 4. 删除购物车数据
             redisTemplate.delete("cart_" + order.getUserId());
 
+
+        }catch (Exception ex){
+            throw new RuntimeException(ex);
+        }
+    }
+
+    /** 从Redis数据库查询支付日志 */
+    public PayLog findPayLogFromRedis(String userId){
+        try{
+            return (PayLog)redisTemplate.boundValueOps("payLog_" + userId).get();
+        }catch (Exception ex){
+            throw new RuntimeException(ex);
+        }
+    }
+
+    /** 支付成功，修改订单状态 */
+    public void updateOrderStatus(String outTradeNo, String transactionId){
+        try{
+            // 1. 修改支付日志
+            PayLog payLog = payLogMapper.selectByPrimaryKey(outTradeNo);
+            payLog.setTradeState("1"); // 交易状态
+            payLog.setPayTime(new Date()); // 支付时间
+            payLog.setTransactionId(transactionId); // 微信支付系统中的订单号
+            payLogMapper.updateByPrimaryKeySelective(payLog);
+
+            // 2. 修改订单状态
+            String[] orderIds = payLog.getOrderList().split(",");
+            for (String orderId : orderIds) {
+                Order order = new Order();
+                order.setOrderId(Long.valueOf(orderId));
+                order.setStatus("2"); // 已付款
+                order.setPaymentTime(new Date()); // 付款时间
+                orderMapper.updateByPrimaryKeySelective(order);
+            }
+
+            // 3. 从Redis删除支付日志
+            redisTemplate.delete("payLog_" + payLog.getUserId());
 
         }catch (Exception ex){
             throw new RuntimeException(ex);
