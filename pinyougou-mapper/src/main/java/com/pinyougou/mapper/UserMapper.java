@@ -1,8 +1,8 @@
 package com.pinyougou.mapper;
 
-import tk.mybatis.mapper.common.Mapper;
-
 import com.pinyougou.pojo.User;
+import org.apache.ibatis.annotations.Param;
+import tk.mybatis.mapper.common.Mapper;
 
 /**
  * UserMapper 数据访问接口
@@ -12,5 +12,10 @@ import com.pinyougou.pojo.User;
 public interface UserMapper extends Mapper<User>{
 
 
+    boolean modifyPassword(@Param("userName") String userName
+                            ,@Param("passwords") String password);
 
+    boolean savePhone(String loginName, String phone);
+
+    String getPhone(@Param("userName") String remoteUser);
 }

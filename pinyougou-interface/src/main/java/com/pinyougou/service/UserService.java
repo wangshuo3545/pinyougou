@@ -1,6 +1,8 @@
 package com.pinyougou.service;
 
 import com.pinyougou.pojo.User;
+
+import java.io.IOException;
 import java.util.List;
 import java.io.Serializable;
 /**
@@ -36,4 +38,14 @@ public interface UserService {
 
 	/** 检验短信验证码 */
 	boolean checkSmsCode(String phone, String code);
+
+    boolean modifyPassword(String userName,String password);
+
+//    boolean savePhone(String loginName, String phone);
+
+	String checkCode() throws IOException;
+
+	boolean checkPhone(String remoteUser);
+
+	String getPhone(String remoteUser);
 }

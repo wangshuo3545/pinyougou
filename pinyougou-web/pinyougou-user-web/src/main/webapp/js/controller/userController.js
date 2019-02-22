@@ -1,6 +1,7 @@
+"use strict";
 /** 定义控制器层 */
-app.controller('userController', function($scope, $timeout, baseService){
-
+app.controller('userController', function($scope, $timeout, $controller,baseService){
+    $controller('indexController', {$scope : $scope});
     $scope.user = {};
 
     // 定义注册用户的方法
@@ -33,7 +34,7 @@ app.controller('userController', function($scope, $timeout, baseService){
     // 获取短信验证码
     $scope.sendSmsCode = function () {
         // 判断手机号码
-        if (!$scope.user.phone || !/^1[3|4|8|5|6|2]\d{9}$/.test($scope.user.phone)){
+        if (!$scope.user.phone || !/^1[348562]\d{9}$/.test($scope.user.phone)){
             alert("手机号码格式不正确！");
         }else{
             $scope.disabled = true;
@@ -70,4 +71,45 @@ app.controller('userController', function($scope, $timeout, baseService){
         }
     };
 
+
+
+    $scope.checkEqual = false;
+    $scope.checkNull = false;
+    $scope.passwordCheck = function(){
+        if ($scope.password == null){
+            alert("密码不可以为空");
+        }
+            if ($scope.password == $scope.confirm_password) {
+                baseService.sendPost("/user/modifyPassword?password=" + $scope.password);
+                alert("保存成功");
+            } else{
+                alert("两次密码输入不一致");
+            }
+    };
+
+
+
+    // 验证码
+    $scope.pushCode = function (target) {
+        target.src = "vcode?t=" + Math.random();
+    };
+
+
+    $scope.checkPhone = function () {
+        baseService.sendGet("/user/checkPhone?checkCode=" + $scope.checkCode)
+            .then(function (response) {
+                if (response.data == false ){
+                    alert("验证码输入有误,请您重新输入!");
+                }else{
+                    alert("发送成功!");
+                };
+            });
+    };
+    $scope.getPhone = function () {
+        baseService.sendGet("/user/getPhone").then(
+            function (response) {
+                $scope.phone  = response.data;
+            }
+        )
+    };
 });

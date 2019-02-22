@@ -5,4 +5,11 @@
 
 <mapper namespace="com.pinyougou.mapper.UserMapper">
 
+	<update id="modifyPassword" >
+			  update tb_user set password=#{passwords} WHERE username = #{userName}
+	</update>
+	<update id="savePhone"></update>
+    <select id="getPhone" resultType="java.lang.String">
+		select phone from tb_user where username = #{userName}
+	</select>
 </mapper>

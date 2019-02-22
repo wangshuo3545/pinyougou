@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -132,5 +133,36 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    @Override
+    public boolean modifyPassword(String userName,String password) {
+        try {
+            //加密密码
+            String passwords = DigestUtils.md5Hex(password);
+            //调用mapper方法
+            return userMapper.modifyPassword(userName,passwords);
+        } catch(Exception e){
+            throw new RuntimeException(e);
+        }
+    }
 
+//    @Override
+//    public boolean savePhone(String loginName, String phone) {
+//        return userMapper.savePhone(loginName,phone);
+//
+//    }
+
+    @Override
+    public String checkCode() throws IOException {
+            return null;
+    }
+
+    @Override
+    public boolean checkPhone(String remoteUser) {
+        return false;
+   }
+
+    @Override
+    public String getPhone(String remoteUser) {
+        return userMapper.getPhone(remoteUser);
+    }
 }

@@ -5,6 +5,9 @@ import com.pinyougou.pojo.User;
 import com.pinyougou.service.UserService;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
 /**
  * 用户控制器
  *
@@ -45,5 +48,47 @@ public class UserController {
             ex.printStackTrace();
         }
         return false;
+    }
+
+//    修改昵称和密码
+    @PostMapping("/modifyPassword")
+    public boolean modifyPassword(HttpServletRequest request,String password){
+//        获取用户名
+        String loginName = request.getRemoteUser();
+        return userService.modifyPassword(loginName,password);
+    }
+
+
+
+
+//检查手机号码
+    @GetMapping("/checkPhone")
+    public boolean checkPhone (HttpServletRequest request,String checkCode){
+        HttpSession session = request.getSession();
+        String vcode = (String) session.getAttribute("vcode");
+        System.out.println(checkCode);
+        System.out.println(vcode);
+        if (vcode.equalsIgnoreCase(checkCode)){
+            String phone = String.valueOf(session.getAttribute("phone"));
+            System.out.println(phone);
+            return userService.sendSmsCode(phone);
+        }
+        return false;
+    }
+
+
+    @GetMapping("/getPhone")
+    public String getPhone(HttpServletRequest request){
+        String remoteUser = request.getRemoteUser();
+        try {
+            String phone = userService.getPhone(remoteUser);
+            HttpSession session = request.getSession();
+            session.setAttribute("phone", phone);
+            return phone;
+        } catch(Exception e){
+            e.printStackTrace();
+            return "号码显示错误";
+        }
+
     }
 }
